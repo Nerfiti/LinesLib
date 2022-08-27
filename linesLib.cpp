@@ -1,8 +1,15 @@
 #include "linesLib.h"
 #include "assert.h"
+#include <sys\stat.h>
 
-// TODO: think about better naming, story about f standing for "first" makes me throw up
-int line_legth(const char *string, int maximum_length) // string_length (TODO: think about making this strNlen (note N in name))
+const int MAXIMUM_LENGTH_OF_THE_LINE = 10000;
+
+bool is_alpha(char c)
+{
+    return ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'));
+}
+
+int line_legth(const char *string, int maximum_length)
 {
     assert(string != NULL);
 
@@ -17,7 +24,12 @@ int lines_compare(const char *string1, const char *string2, int nCharacters)
     assert(string1 != NULL && string2 != NULL);
 
     int len = 1;
-    while(*string1 == *string2 && *string1 != '\0' && *string2 != '\0' && len < nCharacters)
+    while (!is_alpha(*string1))
+        string1++;
+    while (!is_alpha(*string2))
+        string2++;
+    while(*string1 == *string2 && *string1 != '\0' &&
+          *string2 != '\0' && len < nCharacters)
     {
         string1++;
         string2++;
@@ -27,7 +39,7 @@ int lines_compare(const char *string1, const char *string2, int nCharacters)
     return (*string1 - *string2);
 }
 
-char *char_in_line(char *string, int target, int maximum_length) //Как сделать локальный const???
+char *char_in_line(char *string, int target, int maximum_length) //How to make a "local" const???
 {
     for (char *search = string; *search != '\0' && search - string < maximum_length + 1; search++)
     {
@@ -50,71 +62,60 @@ char *lines_cat(char *target, const char *add, int maximum_length)
     return target;
 }
 
-char *f_read_line(FILE *file, int nChar_in_line)
+char **f_read_lines(FILE *file, int *nLines)
 {
     assert(file != NULL);
 
-    char *dst = (char *)calloc(nChar_in_line, sizeof(char));
-    char *writer = dst;
-    char ch = 0;
-    int count = 0;
-    while ((ch = getc(file)) != '\n' && ch != EOF && writer - dst < nChar_in_line)
-    {
-        *writer++ = ch;
-        count++;
-    }
-    *writer = '\0';
-    return dst;
-}
+    int writer = 0;
+    struct stat file_stat = {};
+    fstat(fileno(file), &file_stat);
+    char *destination = (char *)calloc(file_stat.st_size + 1, sizeof(char));
 
-int f_get_nLines(FILE *file, int *nChar_in_lines, int maximum_Nlines)
-{
-    assert(file != NULL);
-    fseek(file, 0, 0);
-    int lines_count = 0,
-        char_in_lines_count = 0,
-        nChar_in_lines_temp[maximum_Nlines];
-    char ch = 0;
-    while((ch = getc(file)) != EOF)
+    while((destination[writer] = getc(file)) != EOF)
     {
-        char_in_lines_count++;
-        if (ch == '\n')
+        if (destination[writer] == '\n')
         {
-            nChar_in_lines_temp[lines_count] = ++char_in_lines_count;
-            lines_count++;
+            (*nLines)++;
         }
+        writer++;
     }
-    for (int i = 0; i < lines_count; i++)
+    (*nLines)++;
+    destination[writer] = '\0';
+
+    char **lines = (char **)calloc(*nLines, sizeof(char *));
+    lines[0] = destination;
+    writer = 0;
+    int line_index = 1;
+    while(destination[writer] != '\0' && line_index <= *nLines)
     {
-        nChar_in_lines[i] = nChar_in_lines_temp[i];
+        if(destination[writer] == '\n')
+        {
+            destination[writer] = '\0';
+            lines[line_index] = &destination[writer + 1];
+            line_index++;
+        }
+        writer++;
     }
-    fseek(file, 0, 0);
-    return (lines_count + 1);
+
+    return lines;
 }
 
-char **f_read_lines(FILE *file, int nLines, int *nChar_in_lines)
-{
-    assert(file != NULL);
-    int count = 0;
-    char **dstarray = (char **)calloc(nLines, sizeof(char *));
-    for (int i = 0; i < nLines; i++)
-    {
-        dstarray[i] = f_read_line(file, nChar_in_lines[i]);
-    }
-    return dstarray;
-}
+//use c library funcion qsort
 
-void lines_sort(char *lines[], int nLines, int *nChar_in_lines)
+void lines_sort(char *lines[], int nLines)
 {
     assert(lines != NULL);
     if (nLines == 0)
         return;
     for (int i = 0; i < nLines - 1; i++)
     {
-        if (lines_compare(lines[i], lines[i+1], nChar_in_lines[i]+2) > 0)
+        if (lines_compare(lines[i], lines[i+1], MAXIMUM_LENGTH_OF_THE_LINE) > 0)
+        {
             swap(lines, i, i+1);
+        }
+
     }
-    lines_sort(lines, nLines - 1, nChar_in_lines);
+    lines_sort(lines, nLines - 1);
 }
 
 void swap(char *lines[], int fIndex, int sIndex)
@@ -132,6 +133,7 @@ void f_print_lines(FILE *file, char *lines[], int nLines)
     for (int i = 0; i < nLines; i++)
     {
         assert(lines[i] != NULL);
+
         fprintf(file, "%s\n", lines[i]);
     }
 }

@@ -1,22 +1,35 @@
 #include "linesLib.h"
 #include "stdio.h"
-int main()
+#include <sys\stat.h>
+#include "malloc.h"
+
+const int MAXIMUM_LENGTH_OF_THE_FILENAME = 1000;
+
+int main(int argc, char *argv[])
 {
-    const int MAXIMUM_LINES_IN_THE_FILE = 100;
-    char **lines;
-    int nChar_in_lines[MAXIMUM_LINES_IN_THE_FILE];
-    FILE *file = fopen("./Strings.txt", "r");
+    //argc = 2;
+    //argv[1] = "./Strings.txt";
+    if (argc < 2)
+    {
+        printf("Error: not enough arguments.\n");
+        return 0;
+    }
+
+    FILE *file = fopen(argv[1], "r");
     if (file == NULL)
     {
         printf("Error opening the file.");
         return 0;
     }
-    int nLines_f = f_get_nLines(file, nChar_in_lines, MAXIMUM_LINES_IN_THE_FILE);
-    printf("%d\n", nLines_f);
 
-    lines = f_read_lines(file, nLines_f, nChar_in_lines);
-    lines_sort(lines, nLines_f, nChar_in_lines);
+    int nLines = 0;
+    char **lines_array = f_read_lines(file, &nLines);
+    printf("\nSorting...\n");
+    lines_sort(lines_array, nLines);
     fclose(file);
+
     file = fopen("Output.txt", "w");
-    f_print_lines(file, lines, nLines_f);
+    f_print_lines(file, lines_array, nLines);
+    fclose(file);
+    f_print_lines(stdout, lines_array, nLines);
 }

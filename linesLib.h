@@ -3,6 +3,7 @@
 
 #include "stdio.h"
 
+bool is_alpha(char c);
 //--------------------------------------------------------
 //! Get string length
 //!
@@ -45,43 +46,23 @@ char *char_in_line(char *string, int target, int maximum_length);
 //---------------------------------------------------------
 char *lines_cat(char *target, const char *add, int maximum_length);
 
-//--------------------------------------------------------
-//! Get line of the file
-//!
-//! \param [in] file pointer to the file
-//! \param [in] nChar_in_line number of characters in line
-//!
-//---------------------------------------------------------
-char *f_read_line(FILE *file, int nChar_in_line);
-
-//---------------------------------------------------------
-//! Get number of lines in file
-//!
-//! \param filename name of the file
-//!
-//! \return number of lines
-//---------------------------------------------------------
-int f_get_nLines(FILE *file, int *nChar_in_lines, int maximum_nLines);
-
 //---------------------------------------------------------
 //! Get lines of the file
 //!
 //! \param [in] file pointer to the file
-//! \param [in] nLines number of lines
-//! \param [in] nChar_in_lines array with the number of characters in lines
+//! \param [out] nLines pointer to number of lines in the file
 //!
 //! \return number of the lines
 //---------------------------------------------------------
-char **f_read_lines(FILE *file, int nLines, int *nChar_in_lines);
+char **f_read_lines(FILE *file, int *nLines);
 
 //---------------------------------------------------------
 //! sort massive of the lines
 //!
 //! \param lines array of the lines
 //! \param nLines number of lines
-//! \param nChar_in_lines array with the number of characters in lines
 //---------------------------------------------------------
-void lines_sort(char *lines[], int nLines, int *nChar_in_lines);
+void lines_sort(char *lines[], int nLines);
 
 //---------------------------------------------------------
 //! Swap 2 array elements
