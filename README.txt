@@ -11,6 +11,15 @@ implementation of sorting strings from a file
 
 -----------------------------------------------------------------------------------------------------------
 
+Examples of the program are shown in the screenshot below:
+
+
+Testing of the file "TestCases.txt":
+
+
+
+-----------------------------------------------------------------------------------------------------------
+
 Command line flags:
 
 flag -t start the program with mode UNIT_TEST (Automatically standart tests).
@@ -43,6 +52,10 @@ Eighth object - length of the second line
 
 Nints object - positive number (if line1 > line2), 0 (if line1 == line2) or 
 negative number (if line1 < line2)
+
+-----------------------------------------------------------------------------------------------------------
+
+Documentation is in zip archive htmldoc/html/index.html.
 
 -----------------------------------------------------------------------------------------------------------
 -----------------------------------------------------------------------------------------------------------
