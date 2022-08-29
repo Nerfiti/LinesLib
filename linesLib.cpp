@@ -1,42 +1,18 @@
 #include "linesLib.h"
 #include "assert.h"
 #include <sys\stat.h>
+#include "ctype.h"
+#include "string.h"
 
-const int MAXIMUM_LENGTH_OF_THE_LINE = 10000;
-
-bool is_alpha(char c)
-{
-    return ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'));
-}
+const int MAXIMUM_LENGTH_OF_THE_LINE = 100000;
 
 int line_legth(const char *string, int maximum_length)
 {
     assert(string != NULL);
 
     int len = 0;
-    while(string[len] != '\0' && len++ < maximum_length)
-        ;
+    while(string[len] != '\0' && len++ < maximum_length) {}
     return len;
-}
-
-int lines_compare(const char *string1, const char *string2, int nCharacters)
-{
-    assert(string1 != NULL && string2 != NULL);
-
-    int len = 1;
-    while (!is_alpha(*string1))
-        string1++;
-    while (!is_alpha(*string2))
-        string2++;
-    while(*string1 == *string2 && *string1 != '\0' &&
-          *string2 != '\0' && len < nCharacters)
-    {
-        string1++;
-        string2++;
-        len++;
-    }
-
-    return (*string1 - *string2);
 }
 
 char *char_in_line(char *string, int target, int maximum_length) //How to make a "local" const???
@@ -44,82 +20,149 @@ char *char_in_line(char *string, int target, int maximum_length) //How to make a
     for (char *search = string; *search != '\0' && search - string < maximum_length + 1; search++)
     {
         if (*search == target)
+        {
             return search;
+        }
     }
     return NULL;
 }
 
-char *lines_cat(char *target, const char *add, int maximum_length)
+void lines_copy(char *target, const char *line)
+{
+    assert(target != NULL && line != NULL);
+
+    while ((*target++ = *line++) != '\0') {}
+}
+
+void lines_cat(char *target, const char *add)
 {
     assert(target != NULL && add != NULL);
 
-    char *writer = target;
-    while (*writer != '\0' && writer - target < maximum_length)
-        writer++;
-    while ((*writer++ = *add++) != '\0' && writer - target < maximum_length)
-        ;
-    *writer = '\0';
-    return target;
+    while (*target != '\0' && target - target)
+    {
+        target++;
+    }
+    lines_copy(target, add);
 }
 
-char **f_read_lines(FILE *file, int *nLines)
+int lines_compare(const char *string1, const char *string2)
+{
+    assert(string1 != NULL && string2 != NULL);
+
+    int len = 1;
+    while (!isalpha(*string1))
+    {
+        string1++;
+    }
+    while (!isalpha(*string2))
+    {
+        string2++;
+    }
+    while(*string1 == *string2 && *string1 != '\0' && *string2 != '\0' && len < MAXIMUM_LENGTH_OF_THE_LINE)
+    {
+        string1++;
+        string2++;
+        len++;
+    }
+    return (*string1 - *string2);
+}
+
+int lines_compare_for_qsort(const void *string1, const void *string2)
+{
+    const char *line1 = *(const char **)string1;
+    const char *line2 = *(const char **)string2;
+    return lines_compare(line1, line2);
+}
+
+int get_file_size(FILE *file)
+{
+    struct stat file_stat = {};
+    fstat(fileno(file), &file_stat);
+    return file_stat.st_size;
+}
+
+char *file_to_memory(FILE *file, int *nLines)
 {
     assert(file != NULL);
 
-    int writer = 0;
-    struct stat file_stat = {};
-    fstat(fileno(file), &file_stat);
-    char *destination = (char *)calloc(file_stat.st_size + 1, sizeof(char));
-
-    while((destination[writer] = getc(file)) != EOF)
+    bool was_alpha = false;
+    char *destination = (char *)calloc(get_file_size(file), sizeof(char)),
+         *start_text = destination,
+         *start_line = destination;
+    while((*destination = getc(file)) != EOF)
     {
-        if (destination[writer] == '\n')
+        if (isalpha(*destination))
         {
-            (*nLines)++;
+            was_alpha = true;
         }
-        writer++;
+        if (*destination == '\n')
+            {
+                if (was_alpha)
+                {
+                    (*nLines)++;
+                    was_alpha = false;
+                    start_line = destination + 1;
+                }
+                else
+                {
+                    destination = start_line - 1;
+                }
+            }
+            destination++;
     }
     (*nLines)++;
-    destination[writer] = '\0';
-
-    char **lines = (char **)calloc(*nLines, sizeof(char *));
-    lines[0] = destination;
-    writer = 0;
-    int line_index = 1;
-    while(destination[writer] != '\0' && line_index <= *nLines)
-    {
-        if(destination[writer] == '\n')
-        {
-            destination[writer] = '\0';
-            lines[line_index] = &destination[writer + 1];
-            line_index++;
-        }
-        writer++;
-    }
-
-    return lines;
+    *destination = '\0';
+    return start_text;
 }
 
-//use c library funcion qsort
+char **line_to_lines(char *text, int nLines)
+{
+    char **lines = (char **)calloc(nLines, sizeof(char *));
+    char **array = lines;
+    *lines++ = text++;
+    int line_index = 1;
+    while(*text != '\0' && line_index <= nLines)
+    {
+        if(*text == '\n')
+        {
+            *text = '\0';
+            *lines++ = text + 1;
+            line_index++;
+        }
+        text++;
+    }
 
-void lines_sort(char *lines[], int nLines)
+    return array;
+}
+
+void lines_sort(char *lines[], int left, int right)
 {
     assert(lines != NULL);
-    if (nLines == 0)
-        return;
-    for (int i = 0; i < nLines - 1; i++)
-    {
-        if (lines_compare(lines[i], lines[i+1], MAXIMUM_LENGTH_OF_THE_LINE) > 0)
-        {
-            swap(lines, i, i+1);
-        }
 
+    if (left >= right)
+    {
+        return;
     }
-    lines_sort(lines, nLines - 1);
+
+    int last = left + 1;
+    for (int i = left + 1; i <= right; i++)
+    {
+        if (lines_compare(lines[left], lines[i]) > 0)
+        {
+            swap(lines, i, last);
+            last++;
+        }
+    }
+    swap(lines, left, last - 1);
+    lines_sort(lines, left, last - 1);
+    lines_sort(lines, last, right);
 }
 
 void swap(char *lines[], int fIndex, int sIndex)
 {
+    assert(lines != NULL);
+    assert(lines[fIndex] != NULL);
+    assert(lines[sIndex] != NULL);
     char *temp = lines[fIndex];
     lines[fIndex] = lines[sIndex];
     lines[sIndex] = temp;
