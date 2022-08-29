@@ -11,15 +11,6 @@ implementation of sorting strings from a file
 
 -----------------------------------------------------------------------------------------------------------
 
-Examples of the program are shown in the screenshot below:
-
-
-Testing of the file "TestCases.txt":
-
-
-
------------------------------------------------------------------------------------------------------------
-
 Command line flags:
 
 flag -t start the program with mode UNIT_TEST (Automatically standart tests).
