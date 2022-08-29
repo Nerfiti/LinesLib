@@ -3,15 +3,25 @@
 
 #include "stdio.h"
 
+//---------------------------------------------------------
+//! Sort lines from the file
+//!
+//! \param [in] filename the name of the file
+//! \param [out] lines_array finished array (sorted) of the file lines
+//! \param [out] nLines pointer to the number of lines
+//!
+//! \return was it possible to sort the array (true or false)
+//---------------------------------------------------------
+char **SortFile(const char *filename, int *nLines);
+
 //--------------------------------------------------------
 //! Get length of the string. The string must end with '\0'
 //!
 //! \param [in] string line
-//! \param [in] maximum_length maximum length of the line
 //!
 //! \return length of the line
 //---------------------------------------------------------
-int line_legth(const char *string, int maximum_length);
+unsigned long int line_legth(const char *string);
 
 //---------------------------------------------------------
 //! Find the first occurrence of a character in a string
@@ -22,7 +32,7 @@ int line_legth(const char *string, int maximum_length);
 //!
 //! \return pointer to the symbol
 //---------------------------------------------------------
-char *char_in_line(char *string, int target, int maximum_length);
+char *char_in_line(const char *string, char target);
 
 //---------------------------------------------------------
 //! Copy line to the line target. The length of the target must be at least the length of the copy line
@@ -102,7 +112,7 @@ char **line_to_lines(char *text, int nLines);
 //! \param left the left border of the sorted part of the array
 //! \param right the кшпре border of the sorted part of the array
 //---------------------------------------------------------
-void lines_sort(char *lines[], int left, int right);
+void lines_qsort(char *lines[], int left, int right);
 
 //---------------------------------------------------------
 //! Swap 2 array elements

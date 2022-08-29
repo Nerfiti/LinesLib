@@ -1,27 +1,56 @@
 #include "linesLib.h"
 #include "assert.h"
-#include <sys\stat.h>
+#include <sys/stat.h>
+#include "sys/time.h"
 #include "ctype.h"
 #include "string.h"
 
-const int MAXIMUM_LENGTH_OF_THE_LINE = 100000;
+const unsigned long int MAXIMUM_LENGTH_OF_THE_LINE = 4294967295;
 
-int line_legth(const char *string, int maximum_length)
+char **SortFile(const char *filename, int *nLines)
+{
+    FILE *file = fopen(filename, "r");
+        if (file == NULL)
+        {
+            printf("Error opening the file.");
+            return NULL;
+        }
+
+        timeval start = {},
+                finish = {};
+        printf("Sorting...\n");
+        gettimeofday(&start, NULL);
+        char *file_text = file_to_memory(file, nLines);
+        char **lines_array = line_to_lines(file_text, *nLines);
+        assert(lines_array != NULL);
+        lines_qsort(lines_array, 0, *nLines - 1);
+        gettimeofday(&finish, NULL);
+        fclose(file);
+        free(file_text);
+        printf("File is sorted. Time: %ld ms.\n",
+               (finish.tv_sec*1000 + finish.tv_usec/1000) - (start.tv_sec*1000 + start.tv_usec/1000));
+        return lines_array;
+}
+
+unsigned long int line_legth(const char *string)
 {
     assert(string != NULL);
 
     int len = 0;
-    while(string[len] != '\0' && len++ < maximum_length) {}
+    while (string[len] != '\0' && len < MAXIMUM_LENGTH_OF_THE_LINE)
+    {
+        len++;
+    }
     return len;
 }
 
-char *char_in_line(char *string, int target, int maximum_length) //How to make a "local" const???
+char *char_in_line(const char *string, char target)
 {
-    for (char *search = string; *search != '\0' && search - string < maximum_length + 1; search++)
+    for (const char *search = string; *search != '\0' && search - string < MAXIMUM_LENGTH_OF_THE_LINE; search++)
     {
         if (*search == target)
         {
-            return search;
+            return (char *)search;
         }
     }
     return NULL;
@@ -38,7 +67,7 @@ void lines_cat(char *target, const char *add)
 {
     assert(target != NULL && add != NULL);
 
-    while (*target != '\0' && target - target)
+    while (*target != '\0')
     {
         target++;
     }
@@ -58,7 +87,7 @@ int lines_compare(const char *string1, const char *string2)
     {
         string2++;
     }
-    while(*string1 == *string2 && *string1 != '\0' && *string2 != '\0' && len < MAXIMUM_LENGTH_OF_THE_LINE)
+    while (*string1 == *string2 && *string1 != '\0' && *string2 != '\0' && len < MAXIMUM_LENGTH_OF_THE_LINE)
     {
         string1++;
         string2++;
@@ -89,25 +118,25 @@ char *file_to_memory(FILE *file, int *nLines)
     char *destination = (char *)calloc(get_file_size(file), sizeof(char)),
          *start_text = destination,
          *start_line = destination;
-    while((*destination = getc(file)) != EOF)
+    while ((*destination = getc(file)) != EOF)
     {
         if (isalpha(*destination))
         {
             was_alpha = true;
         }
         if (*destination == '\n')
+        {
+            if (was_alpha)
             {
-                if (was_alpha)
-                {
-                    (*nLines)++;
-                    was_alpha = false;
-                    start_line = destination + 1;
-                }
-                else
-                {
-                    destination = start_line - 1;
-                }
+                (*nLines)++;
+                was_alpha = false;
+                start_line = destination + 1;
             }
+            else
+            {
+                destination = start_line - 1;
+            }
+        }
             destination++;
     }
     (*nLines)++;
@@ -121,9 +150,9 @@ char **line_to_lines(char *text, int nLines)
     char **array = lines;
     *lines++ = text++;
     int line_index = 1;
-    while(*text != '\0' && line_index <= nLines)
+    while (*text != '\0' && line_index <= nLines)
     {
-        if(*text == '\n')
+        if (*text == '\n')
         {
             *text = '\0';
             *lines++ = text + 1;
@@ -135,7 +164,7 @@ char **line_to_lines(char *text, int nLines)
     return array;
 }
 
-void lines_sort(char *lines[], int left, int right)
+void lines_qsort(char *lines[], int left, int right)
 {
     assert(lines != NULL);
 
@@ -154,8 +183,8 @@ void lines_sort(char *lines[], int left, int right)
         }
     }
     swap(lines, left, last - 1);
-    lines_sort(lines, left, last - 1);
-    lines_sort(lines, last, right);
+    lines_qsort(lines, left, last - 1);
+    lines_qsort(lines, last, right);
 }
 
 void swap(char *lines[], int fIndex, int sIndex)

@@ -3,4 +3,4 @@ project(LinesLib)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(myStrLib main.cpp linesLib.cpp)
+add_executable(myStrLib main.cpp linesLib.cpp UnitTests.cpp ProgramHelper.cpp)
