@@ -1,7 +1,7 @@
 #include "ProgramHelper.h"
 #include "stdio.h"
 
-ProgramMode getProgramMode(int argc, const char **argv)
+ProgramMode getProgramMode(const int argc, const char **argv)
 {
     if (argc >= 2)
     {
@@ -74,7 +74,7 @@ void helperMode()
                    "\n"
                    "-----------------------------------------------------------------------------------------------------------\n"
                    "\n"
-                   "The test file should contain 6 objects in each line, separated by a space\n"
+                   "The test file should contain 9 objects in each line, separated by a space\n"
                    "\n"
                    "First object - first line.\n"
                    "\n"

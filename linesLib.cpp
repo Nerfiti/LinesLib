@@ -1,106 +1,86 @@
-#include "linesLib.h"
 #include "assert.h"
+#include "ctype.h"
+#include "linesLib.h"
 #include <sys/stat.h>
 #include "sys/time.h"
-#include "ctype.h"
-#include "string.h"
 
 const unsigned long int MAXIMUM_LENGTH_OF_THE_LINE = 4294967295;
 
-char **SortFile(const char *filename, int *nLines)
+void SortFile(const char *filename, bool reverse, bool backsort)
 {
+    int nLines = 0;
+    timeval start = {},
+            finish = {};
+
+
+    //Open the file with text
     FILE *file = fopen(filename, "r");
-        if (file == NULL)
-        {
-            printf("Error opening the file.");
-            return NULL;
-        }
-
-        timeval start = {},
-                finish = {};
-        printf("Sorting...\n");
-        gettimeofday(&start, NULL);
-        char *file_text = file_to_memory(file, nLines);
-        char **lines_array = line_to_lines(file_text, *nLines);
-        assert(lines_array != NULL);
-        lines_qsort(lines_array, 0, *nLines - 1);
-        gettimeofday(&finish, NULL);
-        fclose(file);
-        free(file_text);
-        printf("File is sorted. Time: %ld ms.\n",
-               (finish.tv_sec*1000 + finish.tv_usec/1000) - (start.tv_sec*1000 + start.tv_usec/1000));
-        return lines_array;
-}
-
-unsigned long int line_legth(const char *string)
-{
-    assert(string != NULL);
-
-    int len = 0;
-    while (string[len] != '\0' && len < MAXIMUM_LENGTH_OF_THE_LINE)
+    if (file == NULL)
     {
-        len++;
+        printf("Error opening the file.");
+        return;
     }
-    return len;
-}
 
-char *char_in_line(const char *string, char target)
-{
-    for (const char *search = string; *search != '\0' && search - string < MAXIMUM_LENGTH_OF_THE_LINE; search++)
+
+    //Start timer
+    printf("Reading the file...\n");
+    gettimeofday(&start, NULL);
+    //Read file and copy it to memory
+    char *file_text = (char *)calloc(get_file_size(file), sizeof(char));
+    file_to_memory(file, &nLines, file_text);
+    if (file_text == NULL)
     {
-        if (*search == target)
-        {
-            return (char *)search;
-        }
+        printf("File reading error.\n");
+        return;
     }
-    return NULL;
-}
+    //Stop timer
+    gettimeofday(&finish, NULL);
+    printf("The file has been read. Time: %ld ms.\n\n", deltaT(start, finish));
 
-void lines_copy(char *target, const char *line)
-{
-    assert(target != NULL && line != NULL);
 
-    while ((*target++ = *line++) != '\0') {}
-}
-
-void lines_cat(char *target, const char *add)
-{
-    assert(target != NULL && add != NULL);
-
-    while (*target != '\0')
+    //Start timer
+    printf("Splitting the text of the file into lines...\n");
+    gettimeofday(&start, NULL);
+    //Split the text of the file into lines
+    Line *lines_array = (Line *)calloc(nLines, sizeof(Line));
+    line_to_lines(file_text, nLines, lines_array);
+    if (file_text == NULL)
     {
-        target++;
+        printf("Text splitting error.\n");
+        return;
     }
-    lines_copy(target, add);
-}
+    //Stop timer
+    gettimeofday(&finish, NULL);
+    printf("The file has been read. Time: %ld ms.\n\n", deltaT(start, finish));
 
-int lines_compare(const char *string1, const char *string2)
-{
-    assert(string1 != NULL && string2 != NULL);
 
-    int len = 1;
-    while (!isalpha(*string1))
-    {
-        string1++;
-    }
-    while (!isalpha(*string2))
-    {
-        string2++;
-    }
-    while (*string1 == *string2 && *string1 != '\0' && *string2 != '\0' && len < MAXIMUM_LENGTH_OF_THE_LINE)
-    {
-        string1++;
-        string2++;
-        len++;
-    }
-    return (*string1 - *string2);
-}
+    //Start timer
+    printf("Sorting...\n");
+    gettimeofday(&start, NULL);
+    //Sort text of the file
+    lines_qsort(lines_array, 0, nLines - 1, reverse, backsort);
+    //Stop timer
+    gettimeofday(&finish, NULL);
+    printf("The file has been sorted. Time: %ld ms.\n\n", deltaT(start, finish));
 
-int lines_compare_for_qsort(const void *string1, const void *string2)
-{
-    const char *line1 = *(const char **)string1;
-    const char *line2 = *(const char **)string2;
-    return lines_compare(line1, line2);
+
+    assert(fclose(file) != EOF);
+
+
+    //Print sorted text to a file "Output.txt"
+    FILE *out_file = fopen("./Output.txt", "w");
+    if (out_file == NULL)
+    {
+        printf("Error opening the file.\n");
+        return;
+    }
+
+    f_print_lines(out_file, lines_array, nLines);
+
+    free(file_text);
+    free(lines_array);
+
+    assert(fclose(out_file) != EOF);
 }
 
 int get_file_size(FILE *file)
@@ -110,61 +90,61 @@ int get_file_size(FILE *file)
     return file_stat.st_size;
 }
 
-char *file_to_memory(FILE *file, int *nLines)
+void file_to_memory(FILE *file, int *nLines, char *text)
 {
     assert(file != NULL);
+    assert(nLines != NULL);
 
     bool was_alpha = false;
-    char *destination = (char *)calloc(get_file_size(file), sizeof(char)),
-         *start_text = destination,
-         *start_line = destination;
-    while ((*destination = getc(file)) != EOF)
+    char *start_line = text;
+
+    while ((*text = getc(file)) != EOF)
     {
-        if (isalpha(*destination))
+        if (isalpha(*text))
         {
             was_alpha = true;
         }
-        if (*destination == '\n')
+        if (*text == '\n')
         {
             if (was_alpha)
             {
                 (*nLines)++;
                 was_alpha = false;
-                start_line = destination + 1;
+                start_line = text + 1;
             }
             else
             {
-                destination = start_line - 1;
+                text = start_line - 1;
             }
         }
-            destination++;
+        text++;
     }
     (*nLines)++;
-    *destination = '\0';
-    return start_text;
+    *text = '\0';
 }
 
-char **line_to_lines(char *text, int nLines)
+void line_to_lines(char *text, int nLines, Line *lines)
 {
-    char **lines = (char **)calloc(nLines, sizeof(char *));
-    char **array = lines;
-    *lines++ = text++;
+    lines->start = text;
+    text++;
     int line_index = 1;
     while (*text != '\0' && line_index <= nLines)
     {
         if (*text == '\n')
         {
             *text = '\0';
-            *lines++ = text + 1;
+            lines->finish = text;
+            lines++;
+            lines->start = text + 1;
             line_index++;
         }
         text++;
     }
-
-    return array;
+    *text = '\0';
+    lines->finish = text;
 }
 
-void lines_qsort(char *lines[], int left, int right)
+void lines_qsort(Line *lines, int left, int right, bool reverse, bool backsort)
 {
     assert(lines != NULL);
 
@@ -176,36 +156,143 @@ void lines_qsort(char *lines[], int left, int right)
     int last = left + 1;
     for (int i = left + 1; i <= right; i++)
     {
-        if (lines_compare(lines[left], lines[i]) > 0)
+        if (lines_compare(lines[left], lines[i], reverse, backsort) > 0)
         {
             swap(lines, i, last);
             last++;
         }
     }
     swap(lines, left, last - 1);
-    lines_qsort(lines, left, last - 1);
-    lines_qsort(lines, last, right);
+    lines_qsort(lines, left, last - 1, reverse, backsort);
+    lines_qsort(lines, last, right, reverse, backsort);
 }
 
-void swap(char *lines[], int fIndex, int sIndex)
+int lines_compare(Line string1, Line string2, bool reverse, bool backsort)
+{
+    assert(string1.start != NULL && string1.finish != NULL);
+    assert(string2.start != NULL && string2.finish != NULL);
+
+    while (!isalpha((backsort) ? *(string1.finish) : *(string1.start)))
+    {
+        (backsort) ? (string1.finish)-- : (string1.start)++;
+    }
+    while (!isalpha((backsort) ? *string2.finish : *string2.start))
+    {
+        (backsort) ? (string2.finish)-- : (string2.start)++;
+    }
+
+    if (backsort)
+    {
+        while (*(string1.finish) == *(string2.finish) &&
+                 string1.start  <=   string1.finish &&
+                 string2.start  <=   string2.finish)
+        {
+            (string1.finish)--;
+            (string2.finish)--;
+        }
+    }
+    else
+    {
+        while (*(string1.start) == *(string2.start) &&
+                 string1.start  <   string1.finish &&
+                 string2.start  <   string2.finish)
+        {
+            (string1.start)++;
+            (string2.start)++;
+        }
+    }
+    return (backsort) ? *(string1.finish) - *(string2.finish) : *(string1.start) - *(string2.start);
+}
+
+void swap(Line *lines, int fIndex, int sIndex)
 {
     assert(lines != NULL);
-    assert(lines[fIndex] != NULL);
-    assert(lines[sIndex] != NULL);
-    char *temp = lines[fIndex];
+
+    Line temp = lines[fIndex];
     lines[fIndex] = lines[sIndex];
     lines[sIndex] = temp;
 }
 
-void f_print_lines(FILE *file, char *lines[], int nLines)
+void f_print_lines(FILE *file, Line *lines, int nLines)
 {
     assert(file != NULL);
     assert(lines != NULL);
 
     for (int i = 0; i < nLines; i++)
     {
-        assert(lines[i] != NULL);
+        assert(lines[i].start != NULL);
 
-        fprintf(file, "%s\n", lines[i]);
+        fprintf(file, "%s\n", lines[i].start);
     }
+}
+
+Line string_to_Line(const char *string)
+{
+    assert(string != NULL);
+
+    Line line = {};
+    line.start = (char *)string;
+    int len = 0;
+    while (string[len] != '\0' && len < MAXIMUM_LENGTH_OF_THE_LINE)
+    {
+        len++;
+    }
+    line.finish = (char *)&string[len];
+    return line;
+}
+
+unsigned long int line_legth(const Line string)
+{
+    assert(string.start != NULL);
+    assert(string.finish != NULL);
+
+    return string.finish - string.start;
+}
+
+char *char_in_line(Line string, char target)
+{
+    assert(string.start != NULL);
+    assert(string.finish != NULL);
+
+    for (const char *search = string.start; *search != '\0' &&
+                                             search - string.start < MAXIMUM_LENGTH_OF_THE_LINE; search++)
+    {
+        if (*search == target)
+        {
+            return (char *)search;
+        }
+    }
+    return NULL;
+}
+
+void lines_copy(Line *target, Line prototype)
+{
+    assert(target != NULL);
+    assert(target->start != NULL && target->finish != NULL);
+    assert(prototype.start != NULL && prototype.finish != NULL);
+
+    Line writer = *target;
+    while ((*writer.start++ = *prototype.start++) != '\0') {}
+    target->finish = target->start + line_legth(prototype);
+}
+
+void lines_cat(Line *target, Line add)
+{
+    assert(target != NULL);
+    assert(target->start != NULL && target->finish != NULL);
+    assert(add.start != NULL && add.finish != NULL);
+
+    Line writer = *target;
+    while (writer.start <= target->finish)
+    {
+        writer.start++;
+    }
+    writer.start--;
+    lines_copy(&writer, add);
+    target->finish += line_legth(add);
+}
+
+long deltaT(timeval start, timeval finish)
+{
+    return (finish.tv_sec*1000 + finish.tv_usec/1000) - (start.tv_sec*1000 + start.tv_usec/1000);
 }

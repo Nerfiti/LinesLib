@@ -1,8 +1,10 @@
 #ifndef UNITTESTS_H
 #define UNITTESTS_H
+
+#include "linesLib.h"
 #include "stdio.h"
 
-//Lines lengths in test file must not be more than 100
+///Lines lengths in test file must not be more than 100
 
 struct Test_case {
     char *line1 = NULL;
@@ -73,7 +75,16 @@ bool LinesLibTest(Test_case testCase[], int count);
 //----------------------------------------------------------------------
 bool LinesLibTest(const char *filename);
 
-bool Test_char_in_line(char *line, char target, int targetPos);
+//----------------------------------------------------------------------
+//! Test of the char_in_line's work
+//!
+//! \param line line
+//! \param target target symbol
+//! \param targetPos right target poisition in line (0, if line doesn't have the symbol)
+//!
+//! \return has the test been completed (true or false)
+//----------------------------------------------------------------------
+bool Test_char_in_line(Line line, char target, int targetPos);
 
 void skipLine(FILE *file);
 
