@@ -23,7 +23,7 @@ you must enter the file name.
 
 -----------------------------------------------------------------------------------------------------------
 
-The test file should contain 6 objects in each line, separated by a space
+The test file should contain 9 objects in each line, separated by a space
 
 First object - first line.
 
