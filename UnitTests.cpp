@@ -13,9 +13,9 @@ bool stdLinesLibTest()
          str8[] = "It's",
          str9[] = "HEllO";
     Test_case stdCases[numberOfTests] = {
-        {str1, str2, 'o', 5, NULL, str4, 5, 5, 1},
-        {str7, str3, 's', NULL, 4, str5, 5, 4, -1},
-        {str8, str9, 'l', NULL, 3, str6, 4, 5, 1}
+        {str1, str2, 'o', 5, 0, str4, 5, 5, 1},
+        {str7, str3, 's', 0, 4, str5, 5, 4, -1},
+        {str8, str9, 'l', 0, 3, str6, 4, 5, 1}
     };
     return LinesLibTest(stdCases, numberOfTests);
 }
@@ -165,11 +165,11 @@ bool LinesLibTest(const char *filename)
 bool Test_char_in_line(Line line, char target, int targetPos)
 {
     char *ptr = char_in_line(line, target);
-    if (ptr == NULL && targetPos == NULL)
+    if (ptr == NULL && targetPos == 0)
     {
         return true;
     }
-    if ((ptr == NULL && targetPos != NULL) || (ptr != NULL && targetPos == NULL))
+    if ((ptr == NULL && targetPos != 0) || (ptr != NULL && targetPos == 0))
     {
         return false;
     }

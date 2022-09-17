@@ -3,7 +3,6 @@
 #include "ProgramHelper.h"
 #include "UnitTests.h"
 
-
 int main(const int argc, const char *argv[])
 {
     ProgramMode mode = getProgramMode(argc, argv);
@@ -12,7 +11,7 @@ int main(const int argc, const char *argv[])
         case FILE_SORT:
         {
             assert(argc > 2);
-            SortFile(argv[2], false, false);
+            SortFile(argv[2], false, true);
             break;
         }
         case UNIT_TEST:

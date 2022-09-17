@@ -1,17 +1,14 @@
 #include "assert.h"
 #include "ctype.h"
 #include "linesLib.h"
+#include "malloc.h"
 #include <sys/stat.h>
-#include "sys/time.h"
 
 const unsigned long int MAXIMUM_LENGTH_OF_THE_LINE = 4294967295;
 
 void SortFile(const char *filename, bool reverse, bool backsort)
 {
     int nLines = 0;
-    timeval start = {},
-            finish = {};
-
 
     //Open the file with text
     FILE *file = fopen(filename, "r");
@@ -22,9 +19,7 @@ void SortFile(const char *filename, bool reverse, bool backsort)
     }
 
 
-    //Start timer
     printf("Reading the file...\n");
-    gettimeofday(&start, NULL);
     //Read file and copy it to memory
     char *file_text = (char *)calloc(get_file_size(file), sizeof(char));
     file_to_memory(file, &nLines, file_text);
@@ -33,14 +28,10 @@ void SortFile(const char *filename, bool reverse, bool backsort)
         printf("File reading error.\n");
         return;
     }
-    //Stop timer
-    gettimeofday(&finish, NULL);
-    printf("The file has been read. Time: %ld ms.\n\n", deltaT(start, finish));
+    printf("The file has been read.\n\n");
 
 
-    //Start timer
     printf("Splitting the text of the file into lines...\n");
-    gettimeofday(&start, NULL);
     //Split the text of the file into lines
     Line *lines_array = (Line *)calloc(nLines, sizeof(Line));
     line_to_lines(file_text, nLines, lines_array);
@@ -49,19 +40,13 @@ void SortFile(const char *filename, bool reverse, bool backsort)
         printf("Text splitting error.\n");
         return;
     }
-    //Stop timer
-    gettimeofday(&finish, NULL);
-    printf("The file has been read. Time: %ld ms.\n\n", deltaT(start, finish));
+    printf("The text has been splitting.\n\n");
 
 
-    //Start timer
     printf("Sorting...\n");
-    gettimeofday(&start, NULL);
     //Sort text of the file
     lines_qsort(lines_array, 0, nLines - 1, reverse, backsort);
-    //Stop timer
-    gettimeofday(&finish, NULL);
-    printf("The file has been sorted. Time: %ld ms.\n\n", deltaT(start, finish));
+    printf("The file has been sorted.\n\n");
 
 
     assert(fclose(file) != EOF);
@@ -100,7 +85,7 @@ void file_to_memory(FILE *file, int *nLines, char *text)
 
     while ((*text = getc(file)) != EOF)
     {
-        if (isalpha(*text))
+        if (isalpha(*text) && *text != 'I' && *text != 'X' && *text != 'V' && *text != 'L')
         {
             was_alpha = true;
         }
@@ -290,9 +275,4 @@ void lines_cat(Line *target, Line add)
     writer.start--;
     lines_copy(&writer, add);
     target->finish += line_legth(add);
-}
-
-long deltaT(timeval start, timeval finish)
-{
-    return (finish.tv_sec*1000 + finish.tv_usec/1000) - (start.tv_sec*1000 + start.tv_usec/1000);
 }

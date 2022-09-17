@@ -2,7 +2,6 @@
 #define LINESLIB_H
 
 #include "stdio.h"
-#include "sys/time.h"
 
 struct Line{
     char *start = NULL;
@@ -50,7 +49,7 @@ void file_to_memory(FILE *file, int *nLines, char *file_text);
 void line_to_lines(char *text, int nLines, Line *lines);
 
 //-----------------------------------------------------------
-//! Sort massive of the lines.
+//! Sort array of the lines.
 //!
 //! \param [in, out] lines array of the lines
 //! \param [in] left the left border of the sorted part of the array
@@ -58,7 +57,7 @@ void line_to_lines(char *text, int nLines, Line *lines);
 //! \param [in] reverse whether to sort the strings in reverse lexicographic order
 //! \param [in] backsort whether to sort lines from the end
 //-----------------------------------------------------------
-void lines_qsort(Line *lines, int left, int right, bool reverse, bool qsort);
+void lines_qsort(Line *lines, int left, int right, bool reverse, bool backsort);
 
 //-----------------------------------------------------------
 //! Compare two lines by the first nCharacters characters
@@ -135,16 +134,5 @@ void lines_copy(Line *target, Line prototype);
 //! \param [in] add second line
 //-----------------------------------------------------------
 void lines_cat(Line *target, Line add);
-
-//-----------------------------------------------------------
-//! Get the difference between start and finish in
-//! milliseconds
-//!
-//! \param [in] start start timer
-//! \param [in] finish stop timer
-//!
-//! \return milliseconds between start ans finish
-//-----------------------------------------------------------
-long deltaT(timeval start, timeval finish);
 
 #endif //LINESLIB_H
