@@ -41,7 +41,7 @@ Seventh object - length of the first line
 
 Eighth object - length of the second line
 
-Nints object - positive number (if line1 > line2), 0 (if line1 == line2) or 
+Ninets object - positive number (if line1 > line2), 0 (if line1 == line2) or 
 negative number (if line1 < line2)
 
 -----------------------------------------------------------------------------------------------------------
