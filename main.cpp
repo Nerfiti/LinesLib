@@ -10,7 +10,7 @@ int main(const int argc, const char *argv[])
     {
         case FILE_SORT:
         {
-            assert(argc > 2);
+            assert(argc == 3);
             SortFile(argv[2], false, true);
             break;
         }
@@ -21,7 +21,7 @@ int main(const int argc, const char *argv[])
         }
         case UNIT_TEST_OF_THE_FILE:
         {
-            assert(argc > 2);
+            assert(argc == 3);
             LinesLibTest(argv[2]);
             break;
         }

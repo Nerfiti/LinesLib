@@ -1,13 +1,14 @@
 TARGET = linesLib.exe
-CC = g++
+CC = g++ -c
+LINKER = g++
 SRC = $(wildcard *.cpp)
-OBJ = $(patsubst %.c, %.o, $(SRC))
+OBJ = $(patsubst %.cpp, %.o, $(SRC))
 
 $(TARGET) : $(OBJ)
-	$(CC) $(OBJ) -o $(TARGET)
+	$(LINKER) $(OBJ) -o $(TARGET)
 
-%.o : %.c
-	$(CC) -c $< -o $@
+obj : $(SRC)
+	$(CC) $(SRC)
 
 clean :
 	del $(TARGET) *.o

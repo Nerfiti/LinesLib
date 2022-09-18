@@ -4,8 +4,14 @@
 #include "stdio.h"
 
 struct Line{
-    char *start = NULL;
-    char *finish = NULL;
+    char *start = nullptr;
+    char *finish = nullptr;
+};
+
+struct Text{
+    int nLines = 0;
+    char *content = nullptr;
+    Line* lines = nullptr;
 };
 
 //-----------------------------------------------------------
@@ -32,21 +38,18 @@ int get_file_size(FILE *file);
 //! according to this pointer
 //!
 //! \param [in] file pointer to the file
-//! \param [out] nLines pointer to number of lines in the file
-//! \param [out] file_text pointer to the place for the text of the file
+//! \param [out] text pointer to the structure "Text"
 //-----------------------------------------------------------
-void file_to_memory(FILE *file, int *nLines, char *file_text);
+void file_to_memory(FILE *file, Text *text);
 
 //-----------------------------------------------------------
 //! Split text into lines. The user guarantees that
 //! the size of the array allows you to put
 //! all the lines there
 //!
-//! \param [in] line the text to be split
-//! \param [in] nLines number of lines
-//! \param [out] lines array of the lines
+//! \param [in] text the text to be split
 //-----------------------------------------------------------
-void line_to_lines(char *text, int nLines, Line *lines);
+void text_to_lines(Text *text);
 
 //-----------------------------------------------------------
 //! Sort array of the lines.
@@ -134,5 +137,12 @@ void lines_copy(Line *target, Line prototype);
 //! \param [in] add second line
 //-----------------------------------------------------------
 void lines_cat(Line *target, Line add);
+
+//-----------------------------------------------------------
+//! Free buffer of the text
+//!
+//! \param text variable structure "Text"
+//-----------------------------------------------------------
+void FreeBuff(Text text);
 
 #endif //LINESLIB_H
