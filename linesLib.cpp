@@ -3,9 +3,10 @@
 #include "linesLib.h"
 #include "malloc.h"
 #include <sys/stat.h>
-#include "random"
+
 
 const unsigned long int MAXIMUM_LENGTH_OF_THE_LINE = 4294967295;
+const void *JUST_FREE_PTR = "JUST_FREE";
 
 void SortFile(const char *filename, bool reverse, bool backsort)
 {
@@ -51,7 +52,7 @@ void SortFile(const char *filename, bool reverse, bool backsort)
 
     f_print_lines(out_file, file_text.lines, file_text.nLines);
 
-    FreeBuff(file_text);
+    FreeBuff(&file_text);
 
     assert(fclose(out_file) != EOF);
 }
@@ -281,11 +282,19 @@ void lines_cat(Line *target, Line add)
     target->finish += line_legth(add);
 }
 
-void FreeBuff(Text text)
+void FreeBuff(Text *text)
 {
-    assert(text.content != nullptr);
-    assert(text.lines != nullptr);
+    assert(text != nullptr);
+    assert(text->content != nullptr);
+    assert(text->lines != nullptr);
 
-    free(text.content);
-    free(text.lines);
+    if(text->content == JUST_FREE_PTR || text->lines == JUST_FREE_PTR)
+    {
+        printf("Calling the FreeBuff function again. Memory has not been released");
+        return;
+    }
+    free(text->content);
+    free(text->lines);
+    text->content = (char*)JUST_FREE_PTR;
+    text->lines = (Line *)JUST_FREE_PTR;
 }

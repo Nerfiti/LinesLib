@@ -143,6 +143,6 @@ void lines_cat(Line *target, Line add);
 //!
 //! \param text variable structure "Text"
 //-----------------------------------------------------------
-void FreeBuff(Text text);
+void FreeBuff(Text *text);
 
 #endif //LINESLIB_H
