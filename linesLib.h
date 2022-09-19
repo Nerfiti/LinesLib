@@ -1,7 +1,7 @@
 #ifndef LINESLIB_H
 #define LINESLIB_H
 
-#include "stdio.h"
+#include <cstdio>
 
 struct Line{
     char *start = nullptr;
@@ -44,7 +44,7 @@ void file_to_memory(FILE *file, Text *text);
 
 //-----------------------------------------------------------
 //! Split text into lines. The user guarantees that
-//! the size of the array allows you to put
+//! the size of the array "lines" in the structure allows you to put
 //! all the lines there
 //!
 //! \param [in] text the text to be split
@@ -63,14 +63,15 @@ void text_to_lines(Text *text);
 void lines_qsort(Line *lines, int left, int right, bool reverse, bool backsort);
 
 //-----------------------------------------------------------
-//! Compare two lines by the first nCharacters characters
+//! Compare two lines
 //!
 //! \param [in] string1 first line
 //! \param [in] string2 second line
 //! \param [in] reverse whether to sort the strings in reverse lexicographic order
 //! \param [in] backsort whether to sort lines from the end
 //!
-//! \return 0 (if lines are equal), 1 (if first line > second line), -1 (if second line < first line)
+//! \return 0 (if lines are equal), positive (if first line > second line)
+//! or negative (if second line < first line) number
 //-----------------------------------------------------------
 int lines_compare(Line string1, Line string2, bool reverse, bool backsort);
 
@@ -100,7 +101,7 @@ void f_print_lines(FILE *file, Line *lines, int nLines);
 //!
 //! \return line of type (Line)
 //-----------------------------------------------------------
-Line string_to_Line(const char *string);
+Line string_to_Line(char *string);
 
 //-----------------------------------------------------------
 //! Get length of the string.
@@ -145,4 +146,48 @@ void lines_cat(Line *target, Line add);
 //-----------------------------------------------------------
 void FreeBuff(Text *text);
 
+//-----------------------------------------------------------
+//! Compare two lines from the beginning of the line in direct lexicographic order
+//!
+//! \param [in] string1 first line
+//! \param [in] string2 second line
+//! \param [in] reverse whether to sort the strings in reverse lexicographic order
+//! \param [in] backsort whether to sort lines from the end
+//!
+//! \return 0 (if lines are equal), 1 (if first line > second line), -1 (if second line < first line)
+//-----------------------------------------------------------
+int lines_compare_for_qsort_fromBEGINNING_DIRECT(const void *line1, const void *line2);
+
+//-----------------------------------------------------------
+//! Compare two lines from the end of the line in direct lexicographic order
+//!
+//! \param [in] line1 first line
+//! \param [in] line2 second line
+//!
+//! \return 0 (if lines are equal), positive (if first line > second line)
+//! or negative (if second line < first line) number
+//-----------------------------------------------------------
+int lines_compare_for_qsort_fromEND_DIRECT(const void *line1, const void *line2);
+
+//-----------------------------------------------------------
+//! Compare two lines from the beginning of the line in reverse lexicographic order
+//!
+//! \param [in] line1 first line
+//! \param [in] line2 second line
+//!
+//! \return 0 (if lines are equal), positive (if first line > second line)
+//! or negative (if second line < first line) number
+//-----------------------------------------------------------
+int lines_compare_for_qsort_fromBEGINNING_REVERSE(const void *line1, const void *line2);
+
+//-----------------------------------------------------------
+//! Compare two lines from the end of the line in reverse lexicographic order
+//!
+//! \param [in] line1 first line
+//! \param [in] line2 second line
+//!
+//! \return 0 (if lines are equal), positive (if first line > second line)
+//! or negative (if second line < first line) number
+//-----------------------------------------------------------
+int lines_compare_for_qsort_fromEND_REVERSE(const void *line1, const void *line2);
 #endif //LINESLIB_H

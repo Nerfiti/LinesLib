@@ -3,10 +3,11 @@
 #include "linesLib.h"
 #include "malloc.h"
 #include <sys/stat.h>
+#include "MyGeneralFunctions.h"
+#include "limits.h"
 
-
+///Maximum length of the file
 const unsigned long int MAXIMUM_LENGTH_OF_THE_LINE = 4294967295;
-const void *JUST_FREE_PTR = "JUST_FREE";
 
 void SortFile(const char *filename, bool reverse, bool backsort)
 {
@@ -38,6 +39,8 @@ void SortFile(const char *filename, bool reverse, bool backsort)
     //Sort text of the file
     printf("Sorting...\n");
     lines_qsort(file_text.lines, 0, file_text.nLines - 1, reverse, backsort);
+    //MG_qsort(file_text.lines, sizeof(Line)*file_text.nLines, sizeof(Line),
+    //         lines_compare_for_qsort_fromEND_REVERSE);
     printf("The file has been sorted.\n\n");
 
     assert(fclose(file) != EOF);
@@ -151,6 +154,7 @@ void lines_qsort(Line *lines, int left, int right, bool reverse, bool backsort)
             last++;
         }
     }
+
     swap(lines, left, last - 1);
     lines_qsort(lines, left, last - 1, reverse, backsort);
     lines_qsort(lines, last, right, reverse, backsort);
@@ -183,14 +187,15 @@ int lines_compare(Line string1, Line string2, bool reverse, bool backsort)
     else
     {
         while (*(string1.start) == *(string2.start) &&
-                 string1.start  <   string1.finish &&
-                 string2.start  <   string2.finish)
+                 string1.start   <   string1.finish &&
+                 string2.start   <   string2.finish)
         {
             (string1.start)++;
             (string2.start)++;
         }
     }
-    return (backsort) ? *(string1.finish) - *(string2.finish) : *(string1.start) - *(string2.start);
+    int sign = (reverse) ? -1 : 1;
+    return (sign*(backsort)) ? *(string1.finish) - *(string2.finish) : *(string1.start) - *(string2.start);
 }
 
 void swap(Line *lines, int fIndex, int sIndex)
@@ -215,17 +220,19 @@ void f_print_lines(FILE *file, Line *lines, int nLines)
     }
 }
 
-Line string_to_Line(const char *string)
+Line string_to_Line(char *string)
 {
     assert(string != nullptr);
 
     Line line = {};
     line.start = (char *)string;
     int len = 0;
+
     while (string[len] != '\0' && len < MAXIMUM_LENGTH_OF_THE_LINE)
     {
         len++;
     }
+
     line.finish = (char *)&string[len];
     return line;
 }
@@ -277,6 +284,7 @@ void lines_cat(Line *target, Line add)
     {
         writer.start++;
     }
+
     writer.start--;
     lines_copy(&writer, add);
     target->finish += line_legth(add);
@@ -288,13 +296,42 @@ void FreeBuff(Text *text)
     assert(text->content != nullptr);
     assert(text->lines != nullptr);
 
-    if(text->content == JUST_FREE_PTR || text->lines == JUST_FREE_PTR)
+    if (text->content == JUST_FREE_PTR || text->lines == JUST_FREE_PTR)
     {
         printf("Calling the FreeBuff function again. Memory has not been released");
         return;
     }
+
     free(text->content);
     free(text->lines);
-    text->content = (char*)JUST_FREE_PTR;
+    text->content = (char *)JUST_FREE_PTR;
     text->lines = (Line *)JUST_FREE_PTR;
+}
+
+int lines_compare_for_qsort_fromBEGINNING_DIRECT(const void *line1, const void *line2)
+{
+    Line Line1 = *(Line *)line1;
+    Line Line2 = *(Line *)line2;
+    return lines_compare(Line1, Line2, false, false);
+}
+
+int lines_compare_for_qsort_fromEND_DIRECT(const void *line1, const void *line2)
+{
+    Line Line1 = *(Line *)line1;
+    Line Line2 = *(Line *)line2;
+    return lines_compare(Line1, Line2, false, true);
+}
+
+int lines_compare_for_qsort_fromBEGINNING_REVERSE(const void *line1, const void *line2)
+{
+    Line Line1 = *(Line *)line1;
+    Line Line2 = *(Line *)line2;
+    return lines_compare(Line1, Line2, true, false);
+}
+
+int lines_compare_for_qsort_fromEND_REVERSE(const void *line1, const void *line2)
+{
+    Line Line1 = *(Line *)line1;
+    Line Line2 = *(Line *)line2;
+    return lines_compare(Line1, Line2, true, true);
 }
