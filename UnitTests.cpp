@@ -12,10 +12,11 @@ bool stdLinesLibTest()
          str7[] = "Hello",
          str8[] = "It's",
          str9[] = "HEllO";
-    Test_case stdCases[numberOfTests] = {
-        {str1, str2, 'o', 5, 0, str4, 5, 5, 1},
+    Test_case stdCases[numberOfTests] = 
+    {
+        {str1, str2, 'o', 5, 0, str4, 5, 5,  1},
         {str7, str3, 's', 0, 4, str5, 5, 4, -1},
-        {str8, str9, 'l', 0, 3, str6, 4, 5, 1}
+        {str8, str9, 'l', 0, 3, str6, 4, 5,  1}
     };
     return LinesLibTest(stdCases, numberOfTests);
 }
@@ -59,14 +60,14 @@ bool LinesLibTest(int num, char *line1, char *line2, char target, int targetPos1
     }
 
     //line_length testing
-    if (line_legth(Line1) == len1 && line_legth(Line2) == len2)
+    if (line_length(Line1) == len1 && line_length(Line2) == len2)
     {
         printf("testing of the function \"line_length\" was successful.\n");
     }
     else
     {
         printf("\"line_length\" function testing failed. Output: %lu, %lu. Expected: %lu, %lu\n",
-               line_legth(Line1), line_legth(Line2), len1, len2);
+               line_length(Line1), line_length(Line2), len1, len2);
         OK = false;
     }
 
