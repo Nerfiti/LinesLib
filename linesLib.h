@@ -110,7 +110,7 @@ Line string_to_Line(char *string);
 //!
 //! \return length of the line
 //-----------------------------------------------------------
-unsigned long int line_legth(const Line string);
+unsigned long int line_length(const Line string);
 
 //-----------------------------------------------------------
 //! Find the first occurrence of a character in a string

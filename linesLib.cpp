@@ -1,10 +1,10 @@
-#include "assert.h"
-#include "ctype.h"
-#include "linesLib.h"
-#include "malloc.h"
+#include <assert.h>
+#include <ctype.h>
+#include <malloc.h>
 #include <sys/stat.h>
+
+#include "linesLib.h"
 #include "MyGeneralFunctions.h"
-#include "limits.h"
 
 ///Maximum length of the file
 const unsigned long int MAXIMUM_LENGTH_OF_THE_LINE = 4294967295;
@@ -40,7 +40,7 @@ void SortFile(const char *filename, bool reverse, bool backsort)
     printf("Sorting...\n");
     lines_qsort(file_text.lines, 0, file_text.nLines - 1, reverse, backsort);
     //MG_qsort(file_text.lines, sizeof(Line)*file_text.nLines, sizeof(Line),
-    //         lines_compare_for_qsort_fromEND_REVERSE);
+    //         lines_compare_for_qsort_fromBEGINNING_DIRECT);
     printf("The file has been sorted.\n\n");
 
     assert(fclose(file) != EOF);
@@ -72,14 +72,15 @@ void file_to_memory(FILE *file, Text *text)
     assert(file != nullptr);
     assert(text != nullptr);
 
-    text->content = (char *)calloc(get_file_size(file), sizeof(char));
+    text->content = (char *)calloc(get_file_size(file) + 1, sizeof(char));
     assert(text->content != nullptr);
 
+    assert(!setvbuf(file, NULL, _IOFBF, get_file_size(file)));
     char *writer = text->content;
     bool was_alpha = false;
     char *start_line = text->content;
 
-    while ((*writer = getc(file)) != EOF)
+    while ((*writer = getc(file)) != EOF)//TODO: fread
     {
         char curSymbol = *writer;
         if (isalpha(curSymbol) && curSymbol != 'I' && curSymbol != 'X' && curSymbol != 'V' && curSymbol != 'L')
@@ -103,6 +104,7 @@ void file_to_memory(FILE *file, Text *text)
     }
     (text->nLines)++;
     *writer = '\0';
+    setvbuf(file, NULL, _IOFBF, 512);
 }
 
 void text_to_lines(Text *text)
@@ -145,6 +147,8 @@ void lines_qsort(Line *lines, int left, int right, bool reverse, bool backsort)
         return;
     }
 
+    swap(lines, (left + right) / 2, left);
+
     int last = left + 1;
     for (int i = left + 1; i <= right; i++)
     {
@@ -176,9 +180,9 @@ int lines_compare(Line string1, Line string2, bool reverse, bool backsort)
 
     if (backsort)
     {
-        while (*(string1.finish) == *(string2.finish) &&
-                 string1.start  <=   string1.finish &&
-                 string2.start  <=   string2.finish)
+        while (tolower(*(string1.finish)) == tolower(*(string2.finish)) &&
+                         string1.start   <=            string1.finish   &&
+                         string2.start   <=            string2.finish)
         {
             (string1.finish)--;
             (string2.finish)--;
@@ -186,16 +190,20 @@ int lines_compare(Line string1, Line string2, bool reverse, bool backsort)
     }
     else
     {
-        while (*(string1.start) == *(string2.start) &&
-                 string1.start   <   string1.finish &&
-                 string2.start   <   string2.finish)
+        while (tolower(*(string1.start)) == tolower(*(string2.start)) &&
+                         string1.start   <=           string1.finish  &&
+                         string2.start   <=           string2.finish)
         {
             (string1.start)++;
             (string2.start)++;
         }
     }
     int sign = (reverse) ? -1 : 1;
-    return (sign*(backsort)) ? *(string1.finish) - *(string2.finish) : *(string1.start) - *(string2.start);
+    int result = (backsort) ?
+                  tolower(*(string1.finish)) - tolower(*(string2.finish)) :
+                  tolower(*(string1.start))  - tolower(*(string2.start));
+
+    return sign * result;
 }
 
 void swap(Line *lines, int fIndex, int sIndex)
@@ -237,7 +245,7 @@ Line string_to_Line(char *string)
     return line;
 }
 
-unsigned long int line_legth(const Line string)
+unsigned long int line_length(const Line string)
 {
     assert(string.start != nullptr);
     assert(string.finish != nullptr);
@@ -270,7 +278,7 @@ void lines_copy(Line *target, Line prototype)
 
     Line writer = *target;
     while ((*writer.start++ = *prototype.start++) != '\0') {}
-    target->finish = target->start + line_legth(prototype);
+    target->finish = target->start + line_length(prototype);
 }
 
 void lines_cat(Line *target, Line add)
@@ -287,7 +295,7 @@ void lines_cat(Line *target, Line add)
 
     writer.start--;
     lines_copy(&writer, add);
-    target->finish += line_legth(add);
+    target->finish += line_length(add);
 }
 
 void FreeBuff(Text *text)
@@ -298,14 +306,14 @@ void FreeBuff(Text *text)
 
     if (text->content == JUST_FREE_PTR || text->lines == JUST_FREE_PTR)
     {
-        printf("Calling the FreeBuff function again. Memory has not been released");
+        printf("Calling the FreeBuff function again. Memory has not been released a second time.");
         return;
     }
 
     free(text->content);
     free(text->lines);
     text->content = (char *)JUST_FREE_PTR;
-    text->lines = (Line *)JUST_FREE_PTR;
+    text->lines   = (Line *)JUST_FREE_PTR;
 }
 
 int lines_compare_for_qsort_fromBEGINNING_DIRECT(const void *line1, const void *line2)

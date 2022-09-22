@@ -1,5 +1,6 @@
-#include "ProgramHelper.h"
 #include "stdio.h"
+
+#include "ProgramHelper.h"
 
 ProgramMode getProgramMode(const int argc, const char **argv)
 {
@@ -64,7 +65,7 @@ void helperMode()
                    "\n"
                    "Command line flags:\n"
                    "\n"
-                   "flag -t start the program with mode UNIT_TEST (Automatically standart tests).\n"
+                   "flag -t start the program with mode UNIT_TEST (Automatically standard tests).\n"
                    "\n"
                    "flag -s start the program with mode SORT_FILE (The lines in the file will be sorted and placed in the \n"
                    "file \"output.txt\") after this flag, you must enter the file name.\n"
@@ -92,7 +93,7 @@ void helperMode()
                    "\n"
                    "Eighth object - length of the second line\n"
                    "\n"
-                   "Nints object - positive number (if line1 > line2), 0 (if line1 == line2) or \n"
+                   "Ninth object - positive number (if line1 > line2), 0 (if line1 == line2) or \n"
                    "negative number (if line1 < line2)\n"
                    "\n"
                    "-----------------------------------------------------------------------------------------------------------\n"

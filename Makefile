@@ -11,4 +11,4 @@ obj : $(SRC)
 	$(CC) $(SRC)
 
 clean :
-	del $(TARGET) *.o
+	rm *.o
