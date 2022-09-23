@@ -6,26 +6,27 @@
 
 int main(const int argc, const char *argv[])
 {
-    ProgramMode mode = getProgramMode(argc, argv);
+    ProgramMode mode = FILE_SORT;//getProgramMode(argc, argv);
     switch (mode)
     {
         case FILE_SORT:
         {
-            assert(argc >= 3);
+            //assert(argc >= 3);
             bool reverse = false;
-            bool backsort = false;
+            bool backsort = true;
             SortFile(argv[2], reverse, backsort);
+            //SortFile("C:/Users/penko/Downloads/Eugene Onegin.txt", reverse, backsort);
             break;
         }
         case UNIT_TEST:
         {
-            //stdLinesLibTest();
+            stdLinesLibTest();
             break;
         }
         case UNIT_TEST_OF_THE_FILE:
         {
             assert(argc == 3);
-            //LinesLibTest(argv[2]);
+            LinesLibTest(argv[2]);
             break;
         }
         case HELP:

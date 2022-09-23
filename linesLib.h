@@ -52,6 +52,25 @@ void file_to_memory(FILE *file, Text *text);
 void text_to_lines(Text *text);
 
 //-----------------------------------------------------------
+//! Copy text of the file to the memory. The user
+//! guarantees that the entire text will fit into memory
+//! according to this pointer
+//!
+//! \param [in] file pointer to the file
+//! \param [out] text pointer to the structure "Text"
+//-----------------------------------------------------------
+void file_to_memory_with_fread(FILE *file, Text *text);
+
+//-----------------------------------------------------------
+//! Split text into lines. The user guarantees that
+//! the size of the array "lines" in the structure allows you to put
+//! all the lines there
+//!
+//! \param [in] text the text to be split
+//-----------------------------------------------------------
+void text_to_lines_with_empty_lines(Text *text);
+
+//-----------------------------------------------------------
 //! Sort array of the lines.
 //!
 //! \param [in, out] lines array of the lines
@@ -190,4 +209,5 @@ int lines_compare_for_qsort_fromBEGINNING_REVERSE(const void *line1, const void 
 //! or negative (if second line < first line) number
 //-----------------------------------------------------------
 int lines_compare_for_qsort_fromEND_REVERSE(const void *line1, const void *line2);
+
 #endif //LINESLIB_H

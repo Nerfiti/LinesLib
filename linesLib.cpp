@@ -23,7 +23,8 @@ void SortFile(const char *filename, bool reverse, bool backsort)
 
     //Read file and copy it to memory
     printf("Reading the file...\n");
-    file_to_memory(file, &file_text);
+    //file_to_memory(file, &file_text);
+    file_to_memory_with_fread(file, &file_text);
     if (file_text.content == nullptr)
     {
         printf("File reading error.\n");
@@ -33,14 +34,20 @@ void SortFile(const char *filename, bool reverse, bool backsort)
 
     //Split the text of the file into lines
     printf("Splitting the text of the file into lines...\n");
-    text_to_lines(&file_text);
+    text_to_lines_with_empty_lines(&file_text);
     printf("The text has been splitting.\n\n");
 
     //Sort text of the file
     printf("Sorting...\n");
-    lines_qsort(file_text.lines, 0, file_text.nLines - 1, reverse, backsort);
-    //MG_qsort(file_text.lines, sizeof(Line)*file_text.nLines, sizeof(Line),
-    //         lines_compare_for_qsort_fromBEGINNING_DIRECT);
+    comp_t *comparator[2][2] =
+    {
+        lines_compare_for_qsort_fromBEGINNING_DIRECT,
+        lines_compare_for_qsort_fromEND_DIRECT,
+        lines_compare_for_qsort_fromBEGINNING_REVERSE,
+        lines_compare_for_qsort_fromEND_REVERSE
+    };
+    //lines_qsort(file_text.lines, 0, file_text.nLines - 1, reverse, backsort);
+    MG_qsort(file_text.lines, sizeof(Line)*file_text.nLines, sizeof(Line), comparator[reverse][backsort]);
     printf("The file has been sorted.\n\n");
 
     assert(fclose(file) != EOF);
@@ -75,7 +82,7 @@ void file_to_memory(FILE *file, Text *text)
     text->content = (char *)calloc(get_file_size(file) + 1, sizeof(char));
     assert(text->content != nullptr);
 
-    assert(!setvbuf(file, NULL, _IOFBF, get_file_size(file)));
+    assert(!setvbuf(file, nullptr, _IOFBF, get_file_size(file)));
     char *writer = text->content;
     bool was_alpha = false;
     char *start_line = text->content;
@@ -138,6 +145,83 @@ void text_to_lines(Text *text)
     text->lines = start_array;
 }
 
+void file_to_memory_with_fread(FILE *file, Text *text)
+{
+    assert(file != nullptr);
+    assert(text != nullptr);
+
+    size_t file_size = get_file_size(file);
+    text->content = (char *)calloc(file_size + 1, sizeof(char));
+    assert(text->content != nullptr);
+
+    assert(!setvbuf(file, nullptr, _IOFBF, file_size));
+
+    bool  was_alpha  = false;
+    char *reader     = text->content;
+
+    size_t nChar = fread(text->content, sizeof(char), file_size, file);
+    *(text->content + nChar) = '\0';
+
+    setvbuf(file, NULL, _IOFBF, 512);
+
+    while (*reader != '\0')
+    {
+        if (isalpha(*reader) && *reader != 'I' && *reader != 'V' && *reader != 'L' && *reader != 'X')
+        {
+            was_alpha = true;
+        }
+
+        if(*reader == '\n')
+        {
+            if (was_alpha)
+            {
+                (text->nLines)++;
+            }
+            was_alpha = false;
+        }
+        reader++;
+    }
+    (text->nLines)++;
+}
+
+void text_to_lines_with_empty_lines(Text *text)
+{
+    assert(text != nullptr);
+    assert(text->content != nullptr);
+    char *reader = text->content;
+
+    int nLines = text->nLines;
+    text->lines = (Line *)calloc(text->nLines, sizeof(Line));
+    Line *start_array = text->lines;
+    assert(text->lines != nullptr);
+
+    text->lines->start = reader;
+    bool was_alpha = isalpha(*reader);
+    reader++;
+    int line_index = 1;
+    while (*reader != '\0' && line_index <= nLines)
+    {
+        if (isalpha(*reader) && *reader != 'I' && *reader != 'V' && *reader != 'L' && *reader != 'X')
+        {
+            was_alpha = true;
+        }
+
+        if (*reader == '\n' && was_alpha)
+        {
+            *reader = '\0';
+            text->lines->finish = reader;
+            text->lines++;
+            text->lines->start = reader + 1;
+            line_index++;
+            was_alpha = false;
+        }
+        reader++;
+    }
+    *reader = '\0';
+    text->lines->finish = reader;
+    text->lines = start_array;
+}
+
 void lines_qsort(Line *lines, int left, int right, bool reverse, bool backsort)
 {
     assert(lines != nullptr);
@@ -164,45 +248,42 @@ void lines_qsort(Line *lines, int left, int right, bool reverse, bool backsort)
     lines_qsort(lines, last, right, reverse, backsort);
 }
 
-int lines_compare(Line string1, Line string2, bool reverse, bool backsort)
+int lines_compare(Line line1, Line line2, bool reverse, bool backsort)
 {
-    assert(string1.start != nullptr && string1.finish != nullptr);
-    assert(string2.start != nullptr && string2.finish != nullptr);
+    assert(line1.start != nullptr && line1.finish != nullptr);
+    assert(line2.start != nullptr && line2.finish != nullptr);
 
-    while (!isalpha((backsort) ? *(string1.finish) : *(string1.start)))
-    {
-        (backsort) ? (string1.finish)-- : (string1.start)++;
-    }
-    while (!isalpha((backsort) ? *string2.finish : *string2.start))
-    {
-        (backsort) ? (string2.finish)-- : (string2.start)++;
-    }
-
+    int           i       = 0,
+                  j       = 0;
+    unsigned long len1    = line_length(line1),
+                  len2    = line_length(line2);
+    char         *string1 = line1.start,
+                 *string2 = line2.start,
+                  mode    = 1,
+                  sign    = (reverse) ? -1 : 1;
     if (backsort)
     {
-        while (tolower(*(string1.finish)) == tolower(*(string2.finish)) &&
-                         string1.start   <=            string1.finish   &&
-                         string2.start   <=            string2.finish)
-        {
-            (string1.finish)--;
-            (string2.finish)--;
-        }
+                  mode    = -1;
+                  string1 = line1.finish;
+                  string2 = line2.finish;
     }
-    else
-    {
-        while (tolower(*(string1.start)) == tolower(*(string2.start)) &&
-                         string1.start   <=           string1.finish  &&
-                         string2.start   <=           string2.finish)
-        {
-            (string1.start)++;
-            (string2.start)++;
-        }
-    }
-    int sign = (reverse) ? -1 : 1;
-    int result = (backsort) ?
-                  tolower(*(string1.finish)) - tolower(*(string2.finish)) :
-                  tolower(*(string1.start))  - tolower(*(string2.start));
 
+    while (!isalpha(string1[i*mode]) && i < len1)
+    {
+        ++i;
+    }
+    while (!isalpha(string2[j*mode]) && j < len2)
+    {
+        ++j;
+    }
+
+    while (tolower(string1[i*mode]) == tolower(string2[j*mode]) && i < len1 && j < len2)
+    {
+        ++i;
+        ++j;
+    }
+
+    int result = tolower(string1[i*mode]) - tolower(string2[j*mode]);
     return sign * result;
 }
 
@@ -304,7 +385,7 @@ void FreeBuff(Text *text)
     assert(text->content != nullptr);
     assert(text->lines != nullptr);
 
-    if (text->content == JUST_FREE_PTR || text->lines == JUST_FREE_PTR)
+    if (text->content == JUST_FREE_PTR && text->lines == JUST_FREE_PTR)
     {
         printf("Calling the FreeBuff function again. Memory has not been released a second time.");
         return;
